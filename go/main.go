@@ -13,6 +13,7 @@ import (
 	"strconv"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/isucon/isucon13/webapp/go/cache"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -94,7 +95,7 @@ func connectDB(echo.Logger) (*sqlx.DB, error) {
 		conf.ParseTime = parseTime
 	}
 
-	db, err := sqlx.Open("mysql+analyzer", conf.FormatDSN())
+	db, err := sqlx.Open("mysql+cache", conf.FormatDSN())
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +129,14 @@ func main() {
 	cookieStore.Options.Domain = "*.u.isucon.local"
 	e.Use(session.Middleware(cookieStore))
 	// e.Use(middleware.Recover())
+
+	go func() {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(cache.ExportMetrics()))
+		})
+		http.ListenAndServe(":10000", mux)
+	}()
 
 	dynamic_extractor.StartServer()
 
