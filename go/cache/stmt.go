@@ -202,6 +202,7 @@ func (c *cacheConn) QueryContext(ctx context.Context, rawQuery string, nvargs []
 	}
 
 	if c.tx {
+		log.Println("cache skip because of transaction:", rawQuery)
 		return inner.QueryContext(ctx, rawQuery, nvargs)
 	}
 
@@ -209,9 +210,11 @@ func (c *cacheConn) QueryContext(ctx context.Context, rawQuery string, nvargs []
 
 	queryInfo, ok := queryMap[normalizedQuery]
 	if !ok {
+		log.Println("unknown query:", normalizedQuery)
 		return inner.QueryContext(ctx, rawQuery, nvargs)
 	}
 	if queryInfo.Type != domains.CachePlanQueryType_SELECT || !queryInfo.Select.Cache {
+		log.Println("cache skip because of query type:", normalizedQuery)
 		return inner.QueryContext(ctx, rawQuery, nvargs)
 	}
 
