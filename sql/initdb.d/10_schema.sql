@@ -1,5 +1,18 @@
 USE `isupipe`;
 
+DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `icons`;
+DROP TABLE IF EXISTS `themes`;
+DROP TABLE IF EXISTS `livestreams`;
+DROP TABLE IF EXISTS `reservation_slots`;
+DROP TABLE IF EXISTS `tags`;
+DROP TABLE IF EXISTS `livestream_tags`;
+DROP TABLE IF EXISTS `livestream_viewers_history`;
+DROP TABLE IF EXISTS `livecomments`;
+DROP TABLE IF EXISTS `livecomment_reports`;
+DROP TABLE IF EXISTS `ng_words`;
+DROP TABLE IF EXISTS `reactions`;
+
 -- ユーザ (配信者、視聴者)
 CREATE TABLE `users` (
   `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
