@@ -1,0 +1,627 @@
+queries:
+  - query: SELECT id FROM tags WHERE name = ?;
+    type: select
+    table: tags
+    cache: true
+    targets:
+      - id
+    conditions:
+      - column: name
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT * FROM livecomment_reports WHERE livestream_id = ?;
+    type: select
+    table: livecomment_reports
+    cache: true
+    targets:
+      - user_id
+      - livestream_id
+      - livecomment_id
+      - id
+      - created_at
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT IFNULL(MAX(tip), 0) FROM livestreams l INNER JOIN livecomments l2 ON l2.livestream_id = l.id WHERE l.id = ?;
+    type: select
+    table: livestreams
+    cache: false
+  - query: SELECT COUNT(*) FROM livestream_viewers_history WHERE livestream_id = ?;
+    type: select
+    table: livestream_viewers_history
+    cache: true
+    targets:
+      - COUNT()
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT COUNT(*) FROM users u INNER JOIN livestreams l ON l.user_id = u.id INNER JOIN reactions r ON r.livestream_id = l.id WHERE u.id = ?;
+    type: select
+    table: users
+    cache: false
+  - query: SELECT * FROM tags WHERE id = ?;
+    type: select
+    table: tags
+    cache: true
+    targets:
+      - name
+      - id
+    conditions:
+      - column: id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT COUNT(*) FROM livestreams l INNER JOIN reactions r ON l.id = r.livestream_id WHERE l.id = ?;
+    type: select
+    table: livestreams
+    cache: false
+  - query: SELECT * FROM users;
+    type: select
+    table: users
+    cache: true
+    targets:
+      - id
+      - name
+      - display_name
+      - password
+      - description
+  - query: SELECT * FROM livestreams WHERE user_id = ?;
+    type: select
+    table: livestreams
+    cache: true
+    targets:
+      - title
+      - description
+      - playlist_url
+      - thumbnail_url
+      - start_at
+      - end_at
+      - id
+      - user_id
+    conditions:
+      - column: user_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT * FROM livestreams;
+    type: select
+    table: livestreams
+    cache: true
+    targets:
+      - thumbnail_url
+      - start_at
+      - end_at
+      - id
+      - user_id
+      - title
+      - description
+      - playlist_url
+  - query: SELECT COUNT(*) FROM livestreams l INNER JOIN livecomment_reports r ON r.livestream_id = l.id WHERE l.id = ?;
+    type: select
+    table: livestreams
+    cache: false
+  - query: INSERT INTO livecomments (user_id, livestream_id, comment, tip, created_at) VALUES (?);
+    type: insert
+    table: livecomments
+    columns:
+      - user_id
+      - livestream_id
+      - comment
+      - tip
+      - created_at
+  - query: SELECT * FROM tags;
+    type: select
+    table: tags
+    cache: true
+    targets:
+      - name
+      - id
+  - query: SELECT * FROM livestream_tags WHERE livestream_id = ?;
+    type: select
+    table: livestream_tags
+    cache: true
+    targets:
+      - livestream_id
+      - tag_id
+      - id
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT * FROM livecomments WHERE livestream_id = ? ORDER BY created_at DESC LIMIT ?;
+    type: select
+    table: livecomments
+    cache: true
+    targets:
+      - tip
+      - created_at
+      - id
+      - user_id
+      - livestream_id
+      - comment
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+      - column: LIMIT()
+        operator: eq
+        placeholder:
+          index: 0
+          extra: true
+    orders:
+      - column: created_at
+        order: desc
+  - query: INSERT INTO ng_words (user_id, livestream_id, word, created_at) VALUES (?);
+    type: insert
+    table: ng_words
+    columns:
+      - user_id
+      - livestream_id
+      - word
+      - created_at
+  - query: DELETE FROM livestream_viewers_history WHERE user_id = ? AND livestream_id = ?;
+    type: delete
+    table: livestream_viewers_history
+    conditions:
+      - column: user_id
+        operator: eq
+        placeholder:
+          index: 0
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 1
+  - query: SELECT * FROM livestreams ORDER BY id DESC LIMIT ?;
+    type: select
+    table: livestreams
+    cache: true
+    targets:
+      - description
+      - playlist_url
+      - thumbnail_url
+      - start_at
+      - end_at
+      - id
+      - user_id
+      - title
+    conditions:
+      - column: LIMIT()
+        operator: eq
+        placeholder:
+          index: 0
+          extra: true
+    orders:
+      - column: id
+        order: desc
+  - query: SELECT * FROM livecomments;
+    type: select
+    table: livecomments
+    cache: true
+    targets:
+      - livestream_id
+      - comment
+      - tip
+      - created_at
+      - id
+      - user_id
+  - query: SELECT IFNULL(SUM(l2.tip), 0) FROM users u INNER JOIN livestreams l ON l.user_id = u.id INNER JOIN livecomments l2 ON l2.livestream_id = l.id WHERE u.id = ?;
+    type: select
+    table: users
+    cache: false
+  - query: SELECT * FROM livestream_tags WHERE tag_id IN (?) ORDER BY livestream_id DESC;
+    type: select
+    table: livestream_tags
+    cache: true
+    targets:
+      - tag_id
+      - id
+      - livestream_id
+    conditions:
+      - column: tag_id
+        operator: in
+        placeholder:
+          index: 0
+    orders:
+      - column: livestream_id
+        order: desc
+  - query: DELETE FROM livecomments WHERE id = ? AND livestream_id = ? AND (SELECT COUNT(*) FROM (SELECT ? AS text) AS texts INNER JOIN (SELECT CONCAT('%', ?, '%') AS pattern) AS patterns ON texts.text LIKE patterns.pattern) >= 1;
+    type: delete
+    table: livecomments
+  - query: INSERT INTO livestream_tags (livestream_id, tag_id) VALUES (?);
+    type: insert
+    table: livestream_tags
+    columns:
+      - livestream_id
+      - tag_id
+  - query: SELECT * FROM reactions WHERE livestream_id = ? ORDER BY created_at DESC;
+    type: select
+    table: reactions
+    cache: true
+    targets:
+      - id
+      - user_id
+      - livestream_id
+      - emoji_name
+      - created_at
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+    orders:
+      - column: created_at
+        order: desc
+  - query: SELECT * FROM users WHERE id = ?;
+    type: select
+    table: users
+    cache: true
+    targets:
+      - password
+      - description
+      - id
+      - name
+      - display_name
+    conditions:
+      - column: id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT image FROM icons WHERE user_id = ?;
+    type: select
+    table: icons
+    cache: true
+    targets:
+      - image
+    conditions:
+      - column: user_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: INSERT INTO users (name, display_name, description, password) VALUES (?);
+    type: insert
+    table: users
+    columns:
+      - name
+      - display_name
+      - description
+      - password
+  - query: SELECT IFNULL(SUM(tip), 0) FROM livecomments;
+    type: select
+    table: livecomments
+    cache: false
+  - query: INSERT INTO livestreams (user_id, title, description, playlist_url, thumbnail_url, start_at, end_at) VALUES (?);
+    type: insert
+    table: livestreams
+    columns:
+      - user_id
+      - title
+      - description
+      - playlist_url
+      - thumbnail_url
+      - start_at
+      - end_at
+  - query: INSERT INTO livestream_viewers_history (user_id, livestream_id, created_at) VALUES (?);
+    type: insert
+    table: livestream_viewers_history
+    columns:
+      - user_id
+      - livestream_id
+      - created_at
+  - query: INSERT INTO reactions (user_id, livestream_id, emoji_name, created_at) VALUES (?);
+    type: insert
+    table: reactions
+    columns:
+      - user_id
+      - livestream_id
+      - emoji_name
+      - created_at
+  - query: SELECT * FROM livecomments WHERE id = ?;
+    type: select
+    table: livecomments
+    cache: true
+    targets:
+      - id
+      - user_id
+      - livestream_id
+      - comment
+      - tip
+      - created_at
+    conditions:
+      - column: id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: DELETE FROM icons WHERE user_id = ?;
+    type: delete
+    table: icons
+    conditions:
+      - column: user_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT * FROM livecomments WHERE livestream_id = ? ORDER BY created_at DESC LIMIT ?;
+    type: select
+    table: livecomments
+    cache: true
+    targets:
+      - id
+      - user_id
+      - livestream_id
+      - comment
+      - tip
+      - created_at
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+      - column: LIMIT()
+        operator: eq
+        placeholder:
+          index: 0
+          extra: true
+    orders:
+      - column: created_at
+        order: desc
+  - query: SELECT slot FROM reservation_slots WHERE start_at = ? AND end_at = ?;
+    type: select
+    table: reservation_slots
+    cache: true
+    targets:
+      - slot
+    conditions:
+      - column: start_at
+        operator: eq
+        placeholder:
+          index: 0
+      - column: end_at
+        operator: eq
+        placeholder:
+          index: 1
+  - query: SELECT * FROM reservation_slots WHERE start_at >= ? AND end_at <= ? FOR UPDATE;
+    type: select
+    table: reservation_slots
+    cache: false
+  - query: SELECT * FROM reactions WHERE livestream_id = ? ORDER BY created_at DESC LIMIT ?;
+    type: select
+    table: reactions
+    cache: true
+    targets:
+      - user_id
+      - livestream_id
+      - emoji_name
+      - created_at
+      - id
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+      - column: LIMIT()
+        operator: eq
+        placeholder:
+          index: 0
+          extra: true
+    orders:
+      - column: created_at
+        order: desc
+  - query: SELECT * FROM users WHERE name = ?;
+    type: select
+    table: users
+    cache: true
+    targets:
+      - name
+      - display_name
+      - password
+      - description
+      - id
+    conditions:
+      - column: name
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT * FROM livestreams WHERE id = ?;
+    type: select
+    table: livestreams
+    cache: true
+    targets:
+      - user_id
+      - title
+      - description
+      - playlist_url
+      - thumbnail_url
+      - start_at
+      - end_at
+      - id
+    conditions:
+      - column: id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT IFNULL(SUM(l2.tip), 0) FROM livestreams l INNER JOIN livecomments l2 ON l.id = l2.livestream_id WHERE l.id = ?;
+    type: select
+    table: livestreams
+    cache: false
+  - query: SELECT id, user_id, livestream_id, word FROM ng_words WHERE user_id = ? AND livestream_id = ?;
+    type: select
+    table: ng_words
+    cache: true
+    targets:
+      - id
+      - user_id
+      - livestream_id
+      - word
+    conditions:
+      - column: user_id
+        operator: eq
+        placeholder:
+          index: 0
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 1
+  - query: SELECT * FROM livecomments WHERE livestream_id = ? ORDER BY created_at DESC;
+    type: select
+    table: livecomments
+    cache: true
+    targets:
+      - comment
+      - tip
+      - created_at
+      - id
+      - user_id
+      - livestream_id
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+    orders:
+      - column: created_at
+        order: desc
+  - query: UPDATE reservation_slots SET slot = slot - 1 WHERE start_at >= ? AND end_at <= ?;
+    type: update
+    table: reservation_slots
+    targets: []
+  - query: SELECT COUNT(*) FROM users u INNER JOIN livestreams l ON l.user_id = u.id INNER JOIN reactions r ON r.livestream_id = l.id WHERE u.name = ?;
+    type: select
+    table: users
+    cache: false
+  - query: SELECT * FROM ng_words WHERE user_id = ? AND livestream_id = ? ORDER BY created_at DESC;
+    type: select
+    table: ng_words
+    cache: true
+    targets:
+      - word
+      - created_at
+      - id
+      - user_id
+      - livestream_id
+    conditions:
+      - column: user_id
+        operator: eq
+        placeholder:
+          index: 0
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 1
+    orders:
+      - column: created_at
+        order: desc
+  - query: INSERT INTO livecomment_reports (user_id, livestream_id, livecomment_id, created_at) VALUES (?);
+    type: insert
+    table: livecomment_reports
+    columns:
+      - user_id
+      - livestream_id
+      - livecomment_id
+      - created_at
+  - query: SELECT * FROM livecomments WHERE livestream_id = ?;
+    type: select
+    table: livecomments
+    cache: true
+    targets:
+      - comment
+      - tip
+      - created_at
+      - id
+      - user_id
+      - livestream_id
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT r.emoji_name FROM users u INNER JOIN livestreams l ON l.user_id = u.id INNER JOIN reactions r ON r.livestream_id = l.id WHERE u.name = ? GROUP BY emoji_name ORDER BY COUNT(*) DESC, emoji_name DESC LIMIT 1;
+    type: select
+    table: users
+    cache: false
+  - query: SELECT * FROM livestreams WHERE id = ? AND user_id = ?;
+    type: select
+    table: livestreams
+    cache: true
+    targets:
+      - end_at
+      - id
+      - user_id
+      - title
+      - description
+      - playlist_url
+      - thumbnail_url
+      - start_at
+    conditions:
+      - column: id
+        operator: eq
+        placeholder:
+          index: 0
+      - column: user_id
+        operator: eq
+        placeholder:
+          index: 1
+  - query: SELECT * FROM themes WHERE user_id = ?;
+    type: select
+    table: themes
+    cache: true
+    targets:
+      - user_id
+      - dark_mode
+      - id
+    conditions:
+      - column: user_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT id FROM users WHERE name = ?;
+    type: select
+    table: users
+    cache: true
+    targets:
+      - id
+    conditions:
+      - column: name
+        operator: eq
+        placeholder:
+          index: 0
+  - query: INSERT INTO themes (user_id, dark_mode) VALUES (?);
+    type: insert
+    table: themes
+    columns:
+      - user_id
+      - dark_mode
+  - query: SELECT COUNT(*) FROM livestreams l INNER JOIN reactions r ON r.livestream_id = l.id WHERE l.id = ?;
+    type: select
+    table: livestreams
+    cache: false
+  - query: INSERT INTO icons (user_id, image) VALUES (?);
+    type: insert
+    table: icons
+    columns:
+      - user_id
+      - image
+  - query: SELECT * FROM ng_words WHERE livestream_id = ?;
+    type: select
+    table: ng_words
+    cache: true
+    targets:
+      - user_id
+      - livestream_id
+      - word
+      - created_at
+      - id
+    conditions:
+      - column: livestream_id
+        operator: eq
+        placeholder:
+          index: 0
+  - query: SELECT COUNT(*) FROM livestreams l INNER JOIN livestream_viewers_history h ON h.livestream_id = l.id WHERE l.id = ?;
+    type: select
+    table: livestreams
+    cache: false
