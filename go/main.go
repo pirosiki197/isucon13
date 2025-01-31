@@ -20,6 +20,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echolog "github.com/labstack/gommon/log"
+	dynamic_extractor "github.com/traP-jp/isuc/extractor/dynamic"
 )
 
 const (
@@ -44,7 +45,7 @@ type InitializeResponse struct {
 	Language string `json:"language"`
 }
 
-func connectDB(logger echo.Logger) (*sqlx.DB, error) {
+func connectDB(echo.Logger) (*sqlx.DB, error) {
 	const (
 		networkTypeEnvKey = "ISUCON13_MYSQL_DIALCONFIG_NET"
 		addrEnvKey        = "ISUCON13_MYSQL_DIALCONFIG_ADDRESS"
@@ -93,7 +94,7 @@ func connectDB(logger echo.Logger) (*sqlx.DB, error) {
 		conf.ParseTime = parseTime
 	}
 
-	db, err := sqlx.Open("mysql", conf.FormatDSN())
+	db, err := sqlx.Open("mysql+analyzer", conf.FormatDSN())
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +128,8 @@ func main() {
 	cookieStore.Options.Domain = "*.u.isucon.local"
 	e.Use(session.Middleware(cookieStore))
 	// e.Use(middleware.Recover())
+
+	dynamic_extractor.StartServer()
 
 	// 初期化
 	e.POST("/api/initialize", initializeHandler)
