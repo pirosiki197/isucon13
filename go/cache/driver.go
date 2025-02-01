@@ -944,12 +944,7 @@ type cacheTx struct {
 func (t *cacheTx) Commit() error {
 	t.conn.tx = false
 	defer func() {
-		for _, c := range t.conn.cleanUp.purge {
-			c.Purge()
-		}
-		for _, forget := range t.conn.cleanUp.forget {
-			forget.cache.Forget(forget.key)
-		}
+		t.conn.cleanUp.do()
 		t.conn.cleanUp.reset()
 	}()
 	return t.inner.Commit()
