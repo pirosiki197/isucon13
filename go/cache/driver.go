@@ -806,18 +806,18 @@ func init() {
 
 		conditions := query.Select.Conditions
 		if isSingleUniqueCondition(conditions, query.Select.Table) {
-			caches[normalized] = cacheWithInfo{
+			caches[normalized] = &cacheWithInfo{
+				Cache:      sc.NewMust(replaceFn, 10*time.Minute, 10*time.Minute),
 				query:      normalized,
 				info:       *query.Select,
-				cache:      sc.NewMust(replaceFn, 10*time.Minute, 10*time.Minute),
 				uniqueOnly: true,
 			}
 			continue
 		}
-		caches[query.Query] = cacheWithInfo{
+		caches[query.Query] = &cacheWithInfo{
+			Cache:      sc.NewMust(replaceFn, 10*time.Minute, 10*time.Minute),
 			query:      query.Query,
 			info:       *query.Select,
-			cache:      sc.NewMust(replaceFn, 10*time.Minute, 10*time.Minute),
 			uniqueOnly: false,
 		}
 
@@ -860,7 +860,8 @@ var (
 type cacheConn struct {
 	inner   driver.Conn
 	tx      bool
-	cleanUp []func()
+	txStart int64 // time.Time.UnixNano()
+	cleanUp cleanUpTask
 }
 
 func (c *cacheConn) Prepare(rawQuery string) (driver.Stmt, error) {
@@ -903,23 +904,26 @@ func (c *cacheConn) Begin() (driver.Tx, error) {
 		return nil, err
 	}
 	c.tx = true
+	c.txStart = time.Now().UnixNano()
 	return &cacheTx{conn: c, inner: inner}, nil
 }
 
 func (c *cacheConn) BeginTx(ctx context.Context, opts driver.TxOptions) (driver.Tx, error) {
+	var inner driver.Tx
+	var err error
 	if i, ok := c.inner.(driver.ConnBeginTx); ok {
-		inner, err := i.BeginTx(ctx, opts)
+		inner, err = i.BeginTx(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
-		c.tx = true
-		return &cacheTx{conn: c, inner: inner}, nil
-	}
-	inner, err := c.inner.Begin()
-	if err != nil {
-		return nil, err
+	} else {
+		inner, err = c.inner.Begin()
+		if err != nil {
+			return nil, err
+		}
 	}
 	c.tx = true
+	c.txStart = time.Now().UnixNano()
 	return &cacheTx{conn: c, inner: inner}, nil
 }
 
@@ -940,10 +944,13 @@ type cacheTx struct {
 func (t *cacheTx) Commit() error {
 	t.conn.tx = false
 	defer func() {
-		for _, c := range t.conn.cleanUp {
-			c()
+		for _, c := range t.conn.cleanUp.purge {
+			c.Purge()
 		}
-		t.conn.cleanUp = t.conn.cleanUp[:0]
+		for _, forget := range t.conn.cleanUp.forget {
+			forget.cache.Forget(forget.key)
+		}
+		t.conn.cleanUp.reset()
 	}()
 	return t.inner.Commit()
 }
@@ -951,7 +958,7 @@ func (t *cacheTx) Commit() error {
 func (t *cacheTx) Rollback() error {
 	t.conn.tx = false
 	// no need to clean up
-	t.conn.cleanUp = nil
+	t.conn.cleanUp.reset()
 	return t.inner.Rollback()
 }
 
