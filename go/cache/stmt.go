@@ -205,6 +205,7 @@ func (c *cacheConn) QueryContext(ctx context.Context, rawQuery string, nvargs []
 	normalizedQuery := normalizer.NormalizeQuery(rawQuery)
 
 	queryInfo, ok := queryMap[normalizedQuery]
+	log.Printf("query: %s, queryInfo: %+v\n", normalizedQuery, queryInfo)
 	if !ok {
 		return inner.QueryContext(ctx, rawQuery, nvargs)
 	}
