@@ -13,13 +13,13 @@ import (
 	"strconv"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/gorilla/sessions"
 	"github.com/isucon/isucon13/webapp/go/cache"
 	"github.com/jmoiron/sqlx"
-	"github.com/labstack/echo/v4"
-
-	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
 	echolog "github.com/labstack/gommon/log"
+	"github.com/pirosiki197/isulog"
 	dynamic_extractor "github.com/traP-jp/isuc/extractor/dynamic"
 )
 
@@ -129,6 +129,7 @@ func main() {
 	cookieStore.Options.Domain = "*.u.isucon.local"
 	e.Use(session.Middleware(cookieStore))
 	// e.Use(middleware.Recover())
+	e.Use(isulog.Echo())
 
 	go func() {
 		mux := http.NewServeMux()
