@@ -20,6 +20,7 @@ import (
 	"github.com/labstack/echo/v4"
 	echolog "github.com/labstack/gommon/log"
 	"github.com/pirosiki197/isulog"
+	"github.com/pirosiki197/isutool"
 	dynamic_extractor "github.com/traP-jp/isuc/extractor/dynamic"
 )
 
@@ -113,6 +114,8 @@ func initializeHandler(c echo.Context) error {
 		c.Logger().Warnf("init.sh failed with err=%s", string(out))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
 	}
+
+	isutool.Profile()
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	return c.JSON(http.StatusOK, InitializeResponse{

@@ -12,6 +12,7 @@ require (
 	github.com/labstack/gommon v0.4.2
 	github.com/motoki317/sc v1.8.1
 	github.com/pirosiki197/isulog v0.0.5
+	github.com/pirosiki197/isutool v0.0.1
 	github.com/traP-jp/isuc v0.0.0-20250131070853-32e146ea295c
 	golang.org/x/crypto v0.31.0
 )
@@ -22,6 +23,7 @@ require (
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/felixge/fgprof v0.9.5 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.6 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.10.0 // indirect
@@ -31,6 +33,7 @@ require (
 	github.com/go-playground/validator/v10 v10.22.1 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/google/pprof v0.0.0-20241122213907-cbe949e5a41b // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
