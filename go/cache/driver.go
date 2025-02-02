@@ -511,7 +511,10 @@ const cachePlanRaw = `queries:
   - query: UPDATE reservation_slots SET slot = slot - 1 WHERE start_at >= ? AND end_at <= ?;
     type: update
     table: reservation_slots
-    targets: []
+    targets:
+      - column: slot
+        placeholder:
+          index: 0
   - query: SELECT COUNT(*) FROM users u INNER JOIN livestreams l ON l.user_id = u.id INNER JOIN reactions r ON r.livestream_id = l.id WHERE u.name = ?;
     type: select
     table: users
@@ -944,7 +947,12 @@ type cacheTx struct {
 func (t *cacheTx) Commit() error {
 	t.conn.tx = false
 	defer func() {
-		t.conn.cleanUp.do()
+		for _, c := range t.conn.cleanUp.purge {
+			c.Purge()
+		}
+		for _, forget := range t.conn.cleanUp.forget {
+			forget.cache.Forget(forget.key)
+		}
 		t.conn.cleanUp.reset()
 	}()
 	return t.inner.Commit()
