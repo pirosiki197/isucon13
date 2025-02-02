@@ -508,7 +508,7 @@ const cachePlanRaw = `queries:
     orders:
       - column: created_at
         order: desc
-  - query: UPDATE reservation_slots SET slot = slot - 1 WHERE start_at >= ? AND end_at <= ?;
+  - query: UPDATE reservation_slots SET slot = slot - 1 FORCE INDEX (` + "`" + `start_at_end_at` + "`" + `) WHERE start_at >= ? AND end_at <= ?;
     type: update
     table: reservation_slots
     targets:
