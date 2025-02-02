@@ -133,7 +133,7 @@ func reserveLivestreamHandler(c echo.Context) error {
 		}
 	)
 
-	if _, err := tx.ExecContext(ctx, "UPDATE reservation_slots SET slot = slot - 1 FORCE INDEX (`start_at_end_at`) WHERE start_at >= ? AND end_at <= ?", req.StartAt, req.EndAt); err != nil {
+	if _, err := tx.ExecContext(ctx, "UPDATE reservation_slots FORCE INDEX (`start_at_end_at`) SET slot = slot - 1 WHERE start_at >= ? AND end_at <= ?", req.StartAt, req.EndAt); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update reservation_slot: "+err.Error())
 	}
 
